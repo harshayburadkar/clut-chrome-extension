@@ -4,11 +4,41 @@ var switchOngoing = false;
 var intSwitchCount = 1;
 var lastIntSwitchIndex = 0;
 
-var inited = false;
-
 var altPressed = false;
 var wPressed = false;
 
+var prevTimestamp = 0;
+var timerValue = 300;
+var timer;
+
+
+chrome.commands.onCommand.addListener(function(command) {
+	if(command == "alt_switch") {
+		if(!switchOngoing) {
+			switchOngoing = true;
+			console.log("START SWITCH");
+			intSwitchCount = 1;
+			doIntSwitch();
+		} else {
+			console.log("DO INT SWITCH");
+			doIntSwitch();
+		}
+		if(!timer) {
+			timer = setTimeout(function() {endSwitch()},timerValue);	
+		} else {
+			if(switchOngoing) {
+				clearTimeout(timer);
+				timer = setTimeout(function() {endSwitch()},timerValue);	
+			} else {
+				clearTimeout(timer);
+				timer = setTimeout(function() {endSwitch()},timerValue);	
+			}
+		}
+
+		
+	}
+console.log('Command:', command);
+});
 
 chrome.runtime.onStartup.addListener(function () {
 	console.log("on startup");
@@ -78,6 +108,7 @@ var doIntSwitch = function() {
 
 var endSwitch = function() {
 	console.log("CLUT:: in endSwitch");
+	switchOngoing = false;
 	putExistingTabToTop(mru[lastIntSwitchIndex]);
 }
 
@@ -97,30 +128,15 @@ var putExistingTabToTop = function(tabId){
 var initialize = function() {
     chrome.tabs.getAllInWindow(null, function(tabs){
 	    for (var i = 0; i < tabs.length; i++) {
-	      //chrome.tabs.sendRequest(tabs[i].id, { action: "xxx" });                         
-          chrome.tabs.executeScript(tabs[i].id, { file: "CLUTContentScript.js", allFrames: true  }, function(result) {
-          	console.log(result)
-          });
 	      mru.unshift(tabs[i].id);
 	      console.log("MRU after init: "+mru);
 	    }
 	});
 
-	chrome.tabs.query({ url: "*://*/*" }, function(tabs)
-	{
-	    for(var i = 0; i < tabs.length; i++)
-	    {
-	        chrome.tabs.executeScript(tabs[i].id, { file: "CLUTContentScript.js" , allFrames: true}, function(result) {console.log(result)});
-	    }
-	});
+
 }	
 
 chrome.tabs.onActivated.addListener(function(activeInfo){
-
-	// if(!inited) {
-	// 	initialize();
-	// 	inited = true;
-	// }
 	if(! switchOngoing) {
 		var index = mru.indexOf(activeInfo.tabId);
 		if(index != -1) {
