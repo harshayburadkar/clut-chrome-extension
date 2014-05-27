@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
 
-  "name": "Cycle last used tabs",
+  "name": "Cycle Last Used Tabs",
   "description": "Cycle through last used Chrome tabs",
   "version": "1.0",
 
