@@ -8,19 +8,22 @@ var altPressed = false;
 var wPressed = false;
 
 var prevTimestamp = 0;
-var timerValue = 300;
+var timerValue = 400;
 var timer;
+
+var loggingOn = true;
 
 
 chrome.commands.onCommand.addListener(function(command) {
+	CLUTlog('Command recd:' + command);
 	if(command == "alt_switch") {
 		if(!switchOngoing) {
 			switchOngoing = true;
-			console.log("START SWITCH");
+			CLUTlog("CLUT::START_SWITCH");
 			intSwitchCount = 1;
 			doIntSwitch();
 		} else {
-			console.log("DO INT SWITCH");
+			CLUTlog("CLUT::DO_INT_SWITCH");
 			doIntSwitch();
 		}
 		if(!timer) {
@@ -37,86 +40,93 @@ chrome.commands.onCommand.addListener(function(command) {
 
 		
 	}
-console.log('Command:', command);
+
 });
 
 chrome.runtime.onStartup.addListener(function () {
-	console.log("on startup");
+	CLUTlog("on startup");
 	initialize();
 
 });
 
 chrome.runtime.onInstalled.addListener(function () {
-	console.log("on startup");
+	CLUTlog("on startup");
 	initialize();
 
 });
-// chrome.tabs.query({ url: "*://*/*" }, function(tabs)
-// {
-//     for(var i = 0; i < tabs.length; i++)
-//     {
-//         chrome.tabs.executeScript(tabs[i].id, { file: "CLUTContentScript.js" }, function() {});
-//     }
-// });
 
-chrome.runtime.onMessage.addListener(
-  function(request, sender, sendResponse) {
-    console.log(sender.tab ?
-                "from a content script:" + sender.tab.url :
-                "from the extension");
-    if (request.message == "CLUT:ALT_PRESSED") {
-    	altPressed = true;
-    } else if(request.message == "CLUT:W_PRESSED") {
-    	wPressed = true;
-    	if(altPressed) {
-    		if(!switchOngoing) {
-		    	switchOngoing = true;
-				console.log("START SWITCH");
-				intSwitchCount = 1;
-				doIntSwitch();
-			} else {
-				console.log("DO INT SWITCH");
-				doIntSwitch();
-			}
-		}	
-    } else if(request.message == "CLUT:ALT_RELEASED") {
-    	altPressed = false;
-	    if(switchOngoing) {
-	    	switchOngoing = false;
-			endSwitch();
-		}
-    } else if(request.message == "CLUT:W_RELEASED") {
-    	wPressed = false;
-    } else {
-    	console.log("Unidentified message recd!!");
-    	return;
-    }
-
-  	sendResponse({farewell: request.message+"response"});
-
-});
 
 
 var doIntSwitch = function() {
-	console.log("CLUT:: in int switch, intSwitchCount: "+intSwitchCount+", mru.length: "+mru.length);
+	CLUTlog("CLUT:: in int switch, intSwitchCount: "+intSwitchCount+", mru.length: "+mru.length);
 	if (intSwitchCount < mru.length) {
-		chrome.tabs.update(mru[intSwitchCount], {active:true});
+		var tabIdToMakeActive = mru[intSwitchCount];
+		chrome.tabs.update(tabIdToMakeActive, {active:true, highlighted: true});
+		chrome.tabs.get(tabIdToMakeActive, function(tab) {
+			var thisWindowId = tab.windowId;
+			chrome.windows.update(thisWindowId, {"focused":true});
+		});
+		
 		lastIntSwitchIndex = intSwitchCount;
 		intSwitchCount = (intSwitchCount+1)%mru.length;
 	}
 }
 
 var endSwitch = function() {
-	console.log("CLUT:: in endSwitch");
+	CLUTlog("CLUT::END_SWITCH");
 	switchOngoing = false;
-	putExistingTabToTop(mru[lastIntSwitchIndex]);
+	var tabId = mru[lastIntSwitchIndex];
+	putExistingTabToTop(tabId);
+	printMRUSimple();
 }
 
+chrome.tabs.onActivated.addListener(function(activeInfo){
+	if(! switchOngoing) {
+		var index = mru.indexOf(activeInfo.tabId);
 
-var addTabToMRU = function(tabId) {
-	mru.unshift(tabId);
+		//probably should not happen since tab created gets called first than activated for new tabs,
+		// but added as a backup behavior to avoid orphan tabs
+		if(index == -1) {
+			CLUTlog("Unexpected scenario hit with tab("+activeInfo.tabId+").")
+			addTabToMRUAtFront(activeInfo.tabId)
+		} else {
+			putExistingTabToTop(activeInfo.tabId);	
+		}
+	}
+});
+
+chrome.tabs.onCreated.addListener(function(tab) {
+	CLUTlog("Tab create event fired with tab("+tab.id+")");
+	addTabToMRUAtBack(tab.id);
+});
+
+chrome.tabs.onRemoved.addListener(function(tabId, removedInfo) {
+	CLUTlog("Tab remove event fired from tab("+tabId+")");
+	removeTabFromMRU(tabId);
+});
+
+
+var addTabToMRUAtBack = function(tabId) {
+
+	var index = mru.indexOf(tabId);
+	if(index == -1) {
+		//add to the end of mru
+		mru.splice(-1, 0, tabId);
+	}
+
 }
+	
 
+
+var addTabToMRUAtFront = function(tabId) {
+
+	var index = mru.indexOf(tabId);
+	if(index == -1) {
+		//add to the front of mru
+		mru.splice(0, 0,tabId);
+	}
+	
+}
 var putExistingTabToTop = function(tabId){
 	var index = mru.indexOf(tabId);
 	if(index != -1) {
@@ -125,28 +135,71 @@ var putExistingTabToTop = function(tabId){
 	}
 }
 
+var removeTabFromMRU = function(tabId) {
+	var index = mru.indexOf(tabId);
+	if(index != -1) {
+		mru.splice(index, 1);
+	}
+}
+
 var initialize = function() {
-    chrome.tabs.getAllInWindow(null, function(tabs){
-	    for (var i = 0; i < tabs.length; i++) {
-	      mru.unshift(tabs[i].id);
-	      console.log("MRU after init: "+mru);
-	    }
+
+	chrome.windows.getAll({populate:true},function(windows){
+		windows.forEach(function(window){
+			window.tabs.forEach(function(tab){
+				mru.unshift(tab.id);
+			});
+		});
+		CLUTlog("MRU after init: "+mru);
 	});
 
-
+ //    chrome.tabs.getAllInWindow(null, function(tabs){
+	//     for (var i = 0; i < tabs.length; i++) {
+	      
+	//     }
+	//     CLUTlog("MRU after init: "+mru);
+	// });
 }	
 
-chrome.tabs.onActivated.addListener(function(activeInfo){
-	if(! switchOngoing) {
-		var index = mru.indexOf(activeInfo.tabId);
-		if(index != -1) {
-			addTabToMRU(activeInfo.tabId)
-		} else {
-			putExistingTabToTop(activeInfo.tabId);
-		}
-		console.log(mru);
+var printTabInfo = function(tabId) {
+	var info = "";
+	chrome.tabs.get(tabId, function(tab) {
+		info = "Tabid: "+tabId+" title: "+tab.title;
+	});
+	return info;
+}
+
+var str = "MRU status: \n";
+var printMRU = function() {
+	str = "MRU status: \n";
+	for(var i = 0; i < mru.length; i++) {		
+		chrome.tabs.get(mru[i], function(tab) {
+			
+		});				
 	}
-});
+	CLUTlog(str);
+}
+
+var printMRUSimple = function() {
+	CLUTlog("mru: "+mru);
+}
+
+var generatePrintMRUString = function() {
+	chrome.tabs.query(function() {
+		
+	});
+	str += (i + " :("+tab.id+")"+tab.title);
+	str += "\n";
+
+}
+
+var CLUTlog = function(str) {
+	if(loggingOn) {
+		console.log(str);
+	}
+}
+
+
 
 //initialize();
 
