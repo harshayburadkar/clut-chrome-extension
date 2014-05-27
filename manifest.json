@@ -6,12 +6,12 @@
   "version": "1.0",
 
   "permissions": [
-    "https://secure.flickr.com/",
     "tabs"
   ],
-  "browser_action": {
-    "default_icon": "icon.png",
-    "default_popup": "popup.html"
+  "icons": { 
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png" 
   },
   "background":{
     "scripts" : ["background.js"]
@@ -19,10 +19,10 @@
   "commands": {
     "alt_switch": {
       "suggested_key": {
-        "default": "Alt+Q",
-        "mac": "Alt+Q"
+        "default": "Alt+W",
+        "mac": "Alt+W"
       },
-      "description": "Toggle feature foo"
+      "description": "Switch through last used tabs"
     }
   } 
 
