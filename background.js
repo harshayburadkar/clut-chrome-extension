@@ -8,10 +8,10 @@ var altPressed = false;
 var wPressed = false;
 
 var prevTimestamp = 0;
-var timerValue = 400;
+var timerValue = 600;
 var timer;
 
-var loggingOn = true;
+var loggingOn = false;
 
 
 chrome.commands.onCommand.addListener(function(command) {
@@ -36,9 +36,7 @@ chrome.commands.onCommand.addListener(function(command) {
 				clearTimeout(timer);
 				timer = setTimeout(function() {endSwitch()},timerValue);	
 			}
-		}
-
-		
+		}		
 	}
 
 });
@@ -56,19 +54,37 @@ chrome.runtime.onInstalled.addListener(function () {
 });
 
 
-
 var doIntSwitch = function() {
 	CLUTlog("CLUT:: in int switch, intSwitchCount: "+intSwitchCount+", mru.length: "+mru.length);
 	if (intSwitchCount < mru.length) {
-		var tabIdToMakeActive = mru[intSwitchCount];
-		chrome.tabs.update(tabIdToMakeActive, {active:true, highlighted: true});
+		var tabIdToMakeActive;
+		//check if tab is still present
+		//sometimes tabs have gone missing
+		var invalidTab = true;
+		var thisWindowId;
+
+		tabIdToMakeActive = mru[intSwitchCount];
 		chrome.tabs.get(tabIdToMakeActive, function(tab) {
-			var thisWindowId = tab.windowId;
-			chrome.windows.update(thisWindowId, {"focused":true});
-		});
+			if(tab) {
+				thisWindowId = tab.windowId;
+				invalidTab = false;
+
+				chrome.windows.update(thisWindowId, {"focused":true});
+				chrome.tabs.update(tabIdToMakeActive, {active:true, highlighted: true});
+				lastIntSwitchIndex = intSwitchCount;
+				incrementSwitchCounter();
+				//break;
+			} else {
+				CLUTlog("CLUT:: in int switch, >>invalid tab found.intSwitchCount: "+intSwitchCount+", mru.length: "+mru.length);
+				removeItemAtIndexFromMRU(intSwitchCount);
+				if(intSwitchCount >= mru.length) {
+					intSwitchCount = 0;
+				}
+				doIntSwitch();
+			}
+		});	
+
 		
-		lastIntSwitchIndex = intSwitchCount;
-		intSwitchCount = (intSwitchCount+1)%mru.length;
 	}
 }
 
@@ -142,6 +158,16 @@ var removeTabFromMRU = function(tabId) {
 	}
 }
 
+var removeItemAtIndexFromMRU = function(index) {
+	if(index < mru.length) {
+		mru.splice(index, 1);
+	}
+}
+
+var incrementSwitchCounter = function() {
+	intSwitchCount = (intSwitchCount+1)%mru.length;
+}
+
 var initialize = function() {
 
 	chrome.windows.getAll({populate:true},function(windows){
@@ -198,9 +224,5 @@ var CLUTlog = function(str) {
 		console.log(str);
 	}
 }
-
-
-
-//initialize();
 
 

@@ -1,9 +1,10 @@
 {
   "manifest_version": 2,
 
-  "name": "Cycle Last Used Tabs",
-  "description": "Cycle through last used Chrome tabs",
-  "version": "1.0",
+  "name": "CLUT: Cycle Last Used Tabs",
+  "description": "Cycle through last used Chrome tabs using keyboard shortcut.",
+  "version": "1.2",
+  "short_name": "CLUT",
 
   "permissions": [
     "tabs"
@@ -25,5 +26,4 @@
       "description": "Switch through last used tabs"
     }
   } 
-
 }
