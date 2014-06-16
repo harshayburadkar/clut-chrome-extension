@@ -20,6 +20,7 @@ var loggingOn = true;
 chrome.commands.onCommand.addListener(function(command) {
 	CLUTlog('Command recd:' + command);
 	var fastswitch = true;
+	slowswitchForward = false;
 	if(command == "alt_switch_fast") {
 		fastswitch = true;
 	} else if(command == "alt_switch_slow_backward") {
