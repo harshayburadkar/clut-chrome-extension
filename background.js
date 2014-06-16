@@ -1,44 +1,55 @@
 
 var mru = [];
 var switchOngoing = false;
-var intSwitchCount = 1;
+var intSwitchCount = 0;
 var lastIntSwitchIndex = 0;
-
 var altPressed = false;
 var wPressed = false;
 
 var prevTimestamp = 0;
-var timerValue = 600;
+var slowtimerValue = 1200;
+var fasttimerValue = 200;
 var timer;
 
-var loggingOn = false;
+var slowswitchForward = false;
 
+var initialized = false;
+
+var loggingOn = true;
 
 chrome.commands.onCommand.addListener(function(command) {
 	CLUTlog('Command recd:' + command);
-	if(command == "alt_switch") {
-		if(!switchOngoing) {
-			switchOngoing = true;
-			CLUTlog("CLUT::START_SWITCH");
-			intSwitchCount = 1;
-			doIntSwitch();
-		} else {
-			CLUTlog("CLUT::DO_INT_SWITCH");
-			doIntSwitch();
-		}
-		if(!timer) {
-			timer = setTimeout(function() {endSwitch()},timerValue);	
-		} else {
-			if(switchOngoing) {
-				clearTimeout(timer);
-				timer = setTimeout(function() {endSwitch()},timerValue);	
-			} else {
-				clearTimeout(timer);
-				timer = setTimeout(function() {endSwitch()},timerValue);	
-			}
-		}		
+	var fastswitch = true;
+	if(command == "alt_switch_fast") {
+		fastswitch = true;
+	} else if(command == "alt_switch_slow_backward") {
+		fastswitch = false;
+		slowswitchForward = false;
+	} else if(command == "alt_switch_slow_forward") {
+		fastswitch = false;
+		slowswitchForward = true;
 	}
 
+	if(!switchOngoing) {
+		switchOngoing = true;
+		CLUTlog("CLUT::START_SWITCH");
+		intSwitchCount = 0;
+		doIntSwitch();
+	} else {
+		CLUTlog("CLUT::DO_INT_SWITCH");
+		doIntSwitch();
+	}
+	if(timer) {
+		if(switchOngoing) {
+			clearTimeout(timer);
+		}
+	}
+	if(fastswitch) {
+		timer = setTimeout(function() {endSwitch()},fasttimerValue);		
+	} else {
+		timer = setTimeout(function() {endSwitch()},slowtimerValue);		
+	}
+	
 });
 
 chrome.runtime.onStartup.addListener(function () {
@@ -56,13 +67,17 @@ chrome.runtime.onInstalled.addListener(function () {
 
 var doIntSwitch = function() {
 	CLUTlog("CLUT:: in int switch, intSwitchCount: "+intSwitchCount+", mru.length: "+mru.length);
-	if (intSwitchCount < mru.length) {
+	if (intSwitchCount < mru.length && intSwitchCount >= 0) {
 		var tabIdToMakeActive;
 		//check if tab is still present
 		//sometimes tabs have gone missing
 		var invalidTab = true;
 		var thisWindowId;
-
+		if(slowswitchForward) {
+			decrementSwitchCounter();	
+		} else {
+			incrementSwitchCounter();	
+		}
 		tabIdToMakeActive = mru[intSwitchCount];
 		chrome.tabs.get(tabIdToMakeActive, function(tab) {
 			if(tab) {
@@ -72,7 +87,6 @@ var doIntSwitch = function() {
 				chrome.windows.update(thisWindowId, {"focused":true});
 				chrome.tabs.update(tabIdToMakeActive, {active:true, highlighted: true});
 				lastIntSwitchIndex = intSwitchCount;
-				incrementSwitchCounter();
 				//break;
 			} else {
 				CLUTlog("CLUT:: in int switch, >>invalid tab found.intSwitchCount: "+intSwitchCount+", mru.length: "+mru.length);
@@ -97,7 +111,7 @@ var endSwitch = function() {
 }
 
 chrome.tabs.onActivated.addListener(function(activeInfo){
-	if(! switchOngoing) {
+	if(!switchOngoing) {
 		var index = mru.indexOf(activeInfo.tabId);
 
 		//probably should not happen since tab created gets called first than activated for new tabs,
@@ -132,8 +146,6 @@ var addTabToMRUAtBack = function(tabId) {
 
 }
 	
-
-
 var addTabToMRUAtFront = function(tabId) {
 
 	var index = mru.indexOf(tabId);
@@ -168,23 +180,27 @@ var incrementSwitchCounter = function() {
 	intSwitchCount = (intSwitchCount+1)%mru.length;
 }
 
+var decrementSwitchCounter = function() {
+	if(intSwitchCount == 0) {
+		intSwitchCount = mru.length - 1;
+	} else {
+		intSwitchCount = intSwitchCount - 1;
+	}
+}
+
 var initialize = function() {
 
-	chrome.windows.getAll({populate:true},function(windows){
-		windows.forEach(function(window){
-			window.tabs.forEach(function(tab){
-				mru.unshift(tab.id);
+	if(!initialized) {
+		initialized = true;
+		chrome.windows.getAll({populate:true},function(windows){
+			windows.forEach(function(window){
+				window.tabs.forEach(function(tab){
+					mru.unshift(tab.id);
+				});
 			});
+			CLUTlog("MRU after init: "+mru);
 		});
-		CLUTlog("MRU after init: "+mru);
-	});
-
- //    chrome.tabs.getAllInWindow(null, function(tabs){
-	//     for (var i = 0; i < tabs.length; i++) {
-	      
-	//     }
-	//     CLUTlog("MRU after init: "+mru);
-	// });
+	}
 }	
 
 var printTabInfo = function(tabId) {
