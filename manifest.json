@@ -19,12 +19,12 @@
   },
   "commands": {
     "alt_switch_fast": {
-      "suggested_key": {
+      "suggested_key": {  
         "default": "Alt+W",
         "mac": "Alt+W"
       },
       "description": "Quick switch - Use to switch quickly among last 2 to 4 tabs."
-    },
+    },  
     "alt_switch_slow_backward": {
       "suggested_key": {
         "default": "Alt+S",
@@ -34,8 +34,8 @@
     },
     "alt_switch_slow_forward": {
       "suggested_key": {
-        "default": "Alt+D",
-        "mac": "Alt+D"
+        "default": "Alt+Shift+S",
+        "mac": "Alt+Shift+S"
       },
       "description": "Normal switch(forward)"
     }
