@@ -7,7 +7,7 @@ var altPressed = false;
 var wPressed = false;
 
 var prevTimestamp = 0;
-var slowtimerValue = 1200;
+var slowtimerValue = 1500;
 var fasttimerValue = 200;
 var timer;
 
@@ -16,6 +16,40 @@ var slowswitchForward = false;
 var initialized = false;
 
 var loggingOn = true;
+
+var CLUTlog = function(str) {
+	if(loggingOn) {
+		console.log(str);
+	}
+}
+
+
+function onInstall() {
+	CLUTlog("Extension Installed");
+}
+
+function onUpdate() {
+	CLUTlog("Extension Updated");
+	chrome.windows.create({url:"http://www.harshay-buradkar.com/clut_update2.html"});
+}
+
+function getVersion() {
+	var details = chrome.app.getDetails();
+	return details.version;
+}
+
+// Check if the version has changed.
+var currVersion = getVersion();
+var prevVersion = localStorage['version']
+if (currVersion != prevVersion) {
+// Check if we just installed this extension.
+if (typeof prevVersion == 'undefined') {
+  onInstall();
+} else {
+  onUpdate();
+}
+localStorage['version'] = currVersion;
+}
 
 chrome.commands.onCommand.addListener(function(command) {
 	CLUTlog('Command recd:' + command);
@@ -236,10 +270,5 @@ var generatePrintMRUString = function() {
 
 }
 
-var CLUTlog = function(str) {
-	if(loggingOn) {
-		console.log(str);
-	}
-}
 
 
