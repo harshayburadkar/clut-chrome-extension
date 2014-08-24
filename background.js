@@ -15,7 +15,7 @@ var slowswitchForward = false;
 
 var initialized = false;
 
-var loggingOn = true;
+var loggingOn = false;
 
 var CLUTlog = function(str) {
 	if(loggingOn) {
@@ -41,11 +41,12 @@ function getVersion() {
 // Check if the version has changed.
 var currVersion = getVersion();
 var prevVersion = localStorage['version']
+CLUTlog("version: "+prevVersion);
 if (currVersion != prevVersion) {
 // Check if we just installed this extension.
 if (typeof prevVersion == 'undefined') {
-  onInstall();
-} else {
+//   onInstall();
+// } else {
   onUpdate();
 }
 localStorage['version'] = currVersion;

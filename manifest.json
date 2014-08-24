@@ -3,7 +3,7 @@
 
   "name": "CLUT: Cycle Last Used Tabs",
   "description": "Cycle through last used Chrome tabs using keyboard shortcut.",
-  "version": "1.3",
+  "version": "1.4",
   "short_name": "CLUT",
 
   "permissions": [
@@ -23,21 +23,21 @@
         "default": "Alt+W",
         "mac": "Alt+W"
       },
-      "description": "Quick switch - Use to switch quickly among last 2 to 4 tabs."
+      "description": "Quick switch - Use to switch quickly among last 2 to 4 tabs. (Suggested: Alt+W)"
     },  
     "alt_switch_slow_backward": {
       "suggested_key": {
         "default": "Alt+S",
         "mac": "Alt+S"
       },
-      "description": "Normal switch(backward)"
+      "description": "Normal switch backward (Suggested: Alt+S) "
     },
     "alt_switch_slow_forward": {
       "suggested_key": {
         "default": "Alt+Shift+S",
         "mac": "Alt+Shift+S"
       },
-      "description": "Normal switch(forward)"
+      "description": "Normal switch forward (Suggested: Alt+Shift+S)"
     }
   } 
 }
