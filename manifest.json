@@ -3,7 +3,7 @@
 
   "name": "CLUT: Cycle Last Used Tabs",
   "description": "Cycle through last used Chrome tabs using keyboard shortcut.",
-  "version": "1.4",
+  "version": "1.5",
   "short_name": "CLUT",
 
   "permissions": [
