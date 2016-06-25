@@ -1,6 +1,7 @@
 
 var mru = [];
-var switchOngoing = false;
+var slowSwitchOngoing = false;
+var fastSwitchOngoing = false;
 var intSwitchCount = 0;
 var lastIntSwitchIndex = 0;
 var altPressed = false;
@@ -67,17 +68,38 @@ var processCommand = function(command) {
 		slowswitchForward = true;
 	}
 
-	if(!switchOngoing) {
-		switchOngoing = true;
+	if(!slowSwitchOngoing && !fastSwitchOngoing) {
+
+		if(fastswitch) {
+			fastSwitchOngoing = true;
+		} else {
+			slowSwitchOngoing = true;
+		}
+			CLUTlog("CLUT::START_SWITCH");
+			intSwitchCount = 0;
+			doIntSwitch();
+
+	} else if((slowSwitchOngoing && !fastswitch) || (fastSwitchOngoing && fastswitch)){
+		CLUTlog("CLUT::DO_INT_SWITCH");
+		doIntSwitch();
+
+	} else if(slowSwitchOngoing && fastswitch) {
+		endSwitch();
+		fastSwitchOngoing = true;
 		CLUTlog("CLUT::START_SWITCH");
 		intSwitchCount = 0;
 		doIntSwitch();
-	} else {
-		CLUTlog("CLUT::DO_INT_SWITCH");
+
+	} else if(fastSwitchOngoing && !fastswitch) {
+		endSwitch();
+		slowSwitchOngoing = true;
+		CLUTlog("CLUT::START_SWITCH");
+		intSwitchCount = 0;
 		doIntSwitch();
 	}
+
 	if(timer) {
-		if(switchOngoing) {
+		if(fastSwitchOngoing || slowSwitchOngoing) {
 			clearTimeout(timer);
 		}
 	}
@@ -149,14 +171,15 @@ var doIntSwitch = function() {
 
 var endSwitch = function() {
 	CLUTlog("CLUT::END_SWITCH");
-	switchOngoing = false;
+	slowSwitchOngoing = false;
+	fastSwitchOngoing = false;
 	var tabId = mru[lastIntSwitchIndex];
 	putExistingTabToTop(tabId);
 	printMRUSimple();
 }
 
 chrome.tabs.onActivated.addListener(function(activeInfo){
-	if(!switchOngoing) {
+	if(!slowSwitchOngoing && !fastSwitchOngoing) {
 		var index = mru.indexOf(activeInfo.tabId);
 
 		//probably should not happen since tab created gets called first than activated for new tabs,
