@@ -52,7 +52,8 @@ if (typeof prevVersion == 'undefined') {
 localStorage['version'] = currVersion;
 }
 
-chrome.commands.onCommand.addListener(function(command) {
+
+var processCommand = function(command) {
 	CLUTlog('Command recd:' + command);
 	var fastswitch = true;
 	slowswitchForward = false;
@@ -81,11 +82,19 @@ chrome.commands.onCommand.addListener(function(command) {
 		}
 	}
 	if(fastswitch) {
-		timer = setTimeout(function() {endSwitch()},fasttimerValue);		
+		timer = setTimeout(function() {endSwitch()},fasttimerValue);
 	} else {
-		timer = setTimeout(function() {endSwitch()},slowtimerValue);		
+		timer = setTimeout(function() {endSwitch()},slowtimerValue);
 	}
-	
+
+};
+
+chrome.commands.onCommand.addListener(processCommand);
+
+chrome.browserAction.onClicked.addListener(function(tab) {
+	CLUTlog('Click recd');
+	processCommand('alt_switch_fast');
+
 });
 
 chrome.runtime.onStartup.addListener(function () {

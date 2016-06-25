@@ -39,5 +39,8 @@
       },
       "description": "Normal switch forward (Suggested: Alt+Shift+S)"
     }
-  } 
+  },
+  "browser_action": {
+    "default_icon": "icon16.png"
+  }
 }
