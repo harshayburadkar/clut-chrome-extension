@@ -155,25 +155,35 @@ var doIntSwitch = function() {
 		} else {
 			incrementSwitchCounter();	
 		}
-		tabIdToMakeActive = mru[intSwitchCount];
-		chrome.tabs.get(tabIdToMakeActive, function(tab) {
-			if(tab) {
-				thisWindowId = tab.windowId;
-				invalidTab = false;
-
-				chrome.windows.update(thisWindowId, {"focused":true});
-				chrome.tabs.update(tabIdToMakeActive, {active:true, highlighted: true});
-				lastIntSwitchIndex = intSwitchCount;
-				//break;
-			} else {
-				CLUTlog("CLUT:: in int switch, >>invalid tab found.intSwitchCount: "+intSwitchCount+", mru.length: "+mru.length);
-				removeItemAtIndexFromMRU(intSwitchCount);
-				if(intSwitchCount >= mru.length) {
-					intSwitchCount = 0;
-				}
-				doIntSwitch();
+		chrome.tabs.query({lastFocusedWindow: true, active: true}, function(activeTabs) {
+			var activeTab = activeTabs[0];
+			if (!activeTab) {
+				return;
 			}
-		});	
+			tabIdToMakeActive = mru[intSwitchCount];
+			chrome.tabs.get(tabIdToMakeActive, function(tab) {
+				if(tab) {
+					if (tab.windowId !== activeTab.windowId || tab.id === activeTab.id) {
+						doIntSwitch();
+					} else {
+						thisWindowId = tab.windowId;
+						invalidTab = false;
+
+						chrome.windows.update(thisWindowId, {"focused":true});
+						chrome.tabs.update(tabIdToMakeActive, {active:true, highlighted: true});
+						lastIntSwitchIndex = intSwitchCount;
+						//break;
+					}
+				} else {
+					CLUTlog("CLUT:: in int switch, >>invalid tab found.intSwitchCount: "+intSwitchCount+", mru.length: "+mru.length);
+					removeItemAtIndexFromMRU(intSwitchCount);
+					if(intSwitchCount >= mru.length) {
+						intSwitchCount = 0;
+					}
+					doIntSwitch();
+				}
+			});
+		});
 
 		
 	}
