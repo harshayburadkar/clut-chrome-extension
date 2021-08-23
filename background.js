@@ -19,6 +19,7 @@ var timer;
 var slowswitchForward = false;
 
 var initialized = false;
+var options = {};
 
 var loggingOn = false;
 
@@ -157,13 +158,13 @@ var doIntSwitch = function() {
 		}
 		chrome.tabs.query({lastFocusedWindow: true, active: true}, function(activeTabs) {
 			var activeTab = activeTabs[0];
-			if (!activeTab) {
+			if (options.onlySameWindow && !activeTab) {
 				return;
 			}
 			tabIdToMakeActive = mru[intSwitchCount];
 			chrome.tabs.get(tabIdToMakeActive, function(tab) {
 				if(tab) {
-					if (tab.windowId !== activeTab.windowId || tab.id === activeTab.id) {
+					if (options.onlySameWindow && (tab.windowId !== activeTab.windowId || tab.id === activeTab.id)) {
 						doIntSwitch();
 					} else {
 						thisWindowId = tab.windowId;
@@ -287,6 +288,18 @@ var initialize = function() {
 				});
 			});
 			CLUTlog("MRU after init: "+mru);
+		});
+
+		chrome.storage.sync.get({
+			onlySameWindow: false
+		}, function(items) {
+			options.onlySameWindow = items.onlySameWindow;
+		});
+
+		chrome.storage.onChanged.addListener(function (changes) {
+			for (let [key, { newValue }] of Object.entries(changes)) {
+				options[key] = newValue;
+			}
 		});
 	}
 }	
