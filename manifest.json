@@ -7,7 +7,8 @@
   "short_name": "CLUT",
 
   "permissions": [
-    "tabs"
+    "tabs",
+    "storage"
   ],
   "content_security_policy" : "script-src 'self' https://ssl.google-analytics.com; object-src 'self'",
   "icons": {
@@ -43,5 +44,9 @@
   },
   "browser_action": {
     "default_icon": "icon16.png"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
   }
 }
