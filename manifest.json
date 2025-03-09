@@ -16,7 +16,7 @@
     "128": "icon128.png"
   },
   "background":{
-    "scripts" : ["background.js"]
+    "service-worker" : "background.js"
   },
   "commands": {
     "alt_switch_fast": {

@@ -47,7 +47,11 @@ function getVersion() {
 
 // Check if the version has changed.
 var currVersion = getVersion();
-var prevVersion = localStorage['version']
+// var prevVersion = localStorage['version']
+var prevVersion = chrome.storage.local.get(	['version'], function(result) {
+	CLUTlog("prev version: "+ result.version);
+});
+
 CLUTlog("prev version: "+prevVersion);
 CLUTlog("curr version: "+currVersion);
 if (currVersion != prevVersion) {
@@ -57,7 +61,10 @@ if (currVersion != prevVersion) {
     } else {
 		onUpdate();
 	}
-	localStorage['version'] = currVersion;
+	// localStorage['version'] = currVersion;
+	chrome.storage.local.set({'version': currVersion}, function() {
+		CLUTlog("version set to: "+currVersion);
+	})
 }
 
 
