@@ -41,7 +41,7 @@
       "description": "Normal switch forward (Suggested: Alt+Shift+S)"
     }
   },
-  "browser_action": {
+  "action": {
     "default_icon": "icon16.png"
   }
 }

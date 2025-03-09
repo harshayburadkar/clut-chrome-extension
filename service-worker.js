@@ -130,7 +130,7 @@ var processCommand = function(command) {
 
 chrome.commands.onCommand.addListener(processCommand);
 
-chrome.browserAction.onClicked.addListener(function(tab) {
+chrome.action.onClicked.addListener(function(tab) {
 	CLUTlog('Click recd');
 	processCommand('alt_switch_fast');
 
