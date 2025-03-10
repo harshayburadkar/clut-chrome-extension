@@ -7,7 +7,6 @@ var lastIntSwitchIndex = 0;
 var altPressed = false;
 var wPressed = false;
 
-var domLoaded = false
 var quickActive = 0;
 var slowActive = 0;
 
@@ -74,15 +73,12 @@ var processCommand = function(command) {
 	slowswitchForward = false;
 	if(command == "alt_switch_fast") {
 		fastswitch = true;
-		quickSwitchActiveUsage();
 	} else if(command == "alt_switch_slow_backward") {
 		fastswitch = false;
 		slowswitchForward = false;
-		slowSwitchActiveUsage();
 	} else if(command == "alt_switch_slow_forward") {
 		fastswitch = false;
 		slowswitchForward = true;
-		slowSwitchActiveUsage();
 	}
 
 	if(!slowSwitchOngoing && !fastSwitchOngoing) {
@@ -321,52 +317,3 @@ var generatePrintMRUString = function() {
 }
 
 initialize();
-
-var quickSwitchActiveUsage = function() {
-
-	if(domLoaded) {
-		if(quickActive == -1) {
-			return;
-		} else if(quickActive < 5){
-			quickActive++;
-		} else if(quickActive >= 5) {
-			// _gaq.push(['_trackEvent', 'activeUsage', 'quick']);
-			quickActive = -1;
-		}
-	}
-}
-
-var slowSwitchActiveUsage = function() {
-
-	if(domLoaded) {
-		if(slowActive == -1) {
-			return;
-		} else if(slowActive < 5){
-			slowActive++;
-		} else if(slowActive >= 5) {
-			// _gaq.push(['_trackEvent', 'activeUsage', 'slow']);
-			slowActive = -1;
-		}
-	}
-}
-
-//TODO disable for now, need to find a way to migrate later
-//check for actual active users
-// var _AnalyticsCode = 'UA-51920707-1';
-// var _gaq = _gaq || [];
-// _gaq.push(['_setAccount', _AnalyticsCode]);
-// _gaq.push(['_trackPageview']);
-
-// (function() {
-// 	var ga = document.createElement('script');
-// 	ga.type = 'text/javascript';
-// 	ga.async = true;
-// 	ga.src = 'https://ssl.google-analytics.com/ga.js';
-// 	//ga.src = 'https://ssl.google-analytics.com/u/ga_debug.js';
-// 	var s = document.getElementsByTagName('script')[0];
-// 	s.parentNode.insertBefore(ga, s);
-// })();
-document.addEventListener('DOMContentLoaded', function () {
-	domLoaded = true;
-
-});
