@@ -7,8 +7,7 @@
   "short_name": "CLUT",
 
   "permissions": [
-    "tabs",
-    "storage"
+    "tabs"
   ],
   "icons": {
     "16": "icon16.png",
