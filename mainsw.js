@@ -27,46 +27,6 @@ var CLUTlog = function(str) {
 	}
 }
 
-
-
-function onInstall() {
-	CLUTlog("Extension Installed");
-	chrome.windows.create({url:"http://www.harshay-buradkar.com/clut_update6.html"});
-}
-
-function onUpdate() {
-	CLUTlog("Extension Updated");
-	chrome.windows.create({url:"http://www.harshay-buradkar.com/clut_update6.html"});
-}
-
-function getVersion() {
-	var details = chrome.app.getDetails();
-	return details.version;
-}
-
-// Check if the version has changed.
-var currVersion = getVersion();
-// var prevVersion = localStorage['version']
-var prevVersion = chrome.storage.local.get(	['version'], function(result) {
-	CLUTlog("prev version: "+ result.version);
-});
-
-CLUTlog("prev version: "+prevVersion);
-CLUTlog("curr version: "+currVersion);
-if (currVersion != prevVersion) {
-// Check if we just installed this extension.
-	if (typeof prevVersion == 'undefined') {
-        onInstall();
-    } else {
-		onUpdate();
-	}
-	// localStorage['version'] = currVersion;
-	chrome.storage.local.set({'version': currVersion}, function() {
-		CLUTlog("version set to: "+currVersion);
-	})
-}
-
-
 var processCommand = function(command) {
 	CLUTlog('Command recd:' + command);
 	var fastswitch = true;
