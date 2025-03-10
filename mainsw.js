@@ -27,6 +27,16 @@ var CLUTlog = function(str) {
 	}
 }
 
+chrome.runtime.onInstalled.addListener((details) => {
+	if (details.reason === "install") {
+			CLUTlog("Extension Installed");
+			chrome.windows.create({url:"http://www.harshay-buradkar.com/clut_update6.html"});
+	} else if (details.reason === "update") {
+			CLUTlog("Extension Updated");
+			chrome.windows.create({url:"http://www.harshay-buradkar.com/clut_update6.html"});
+	}
+});
+
 var processCommand = function(command) {
 	CLUTlog('Command recd:' + command);
 	var fastswitch = true;
