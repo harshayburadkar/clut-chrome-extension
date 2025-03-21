@@ -286,4 +286,53 @@ var generatePrintMRUString = function() {
 
 }
 
+// To fix the issue of service worker getting killed by Chrome after 30 seconds of inactivity
+const INTERNAL_STAYALIVE_PORT = "Whatever_Port_Name_You_Want";
+var alivePort = null;
+
+async function StayAlive() {
+  var lastCall = Date.now();
+  var wakeup = setInterval(() => {
+    const now = Date.now();
+    const age = now - lastCall;
+
+    console.log(
+      `(DEBUG StayAlive) ----------------------- time elapsed: ${age}`
+    );
+    if (alivePort == null) {
+      alivePort = chrome.runtime.connect({ name: INTERNAL_STAYALIVE_PORT });
+
+      alivePort.onDisconnect.addListener((p) => {
+        if (chrome.runtime.lastError) {
+          console.log(
+            `(DEBUG StayAlive) Disconnected due to an error: ${chrome.runtime.lastError.message}`
+          );
+        } else {
+          console.log(`(DEBUG StayAlive): port disconnected`);
+        }
+
+        alivePort = null;
+      });
+    }
+
+    if (alivePort) {
+      alivePort.postMessage({ content: "ping" });
+
+      if (chrome.runtime.lastError) {
+        console.log(
+          `(DEBUG StayAlive): postMessage error: ${chrome.runtime.lastError.message}`
+        );
+      } else {
+        console.log(
+          `(DEBUG StayAlive): "ping" sent through ${alivePort.name} port`
+        );
+      }
+    }
+    //lastCall = Date.now();
+  }, 25000);
+}
+
+
+StayAlive();
+
 initialize();
